@@ -1,0 +1,8 @@
+Mantenimiento;30000.0
+Cambio de componente;20000.0
+Diagnostico/Revision;13000.0
+Limpieza de GPU;15000.0
+Despiece - Cambio de componente;33000.0
+Formateo - Instalacion de SO - Basico (sin Backup);53000.0
+Formateo - Instalacion de SO - Basico (con Backup);63000.0
+Mantenimiento (Notebook);33000.0
