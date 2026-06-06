@@ -1,1 +1,4 @@
 Cliente: Bruno Dido | Servicios: Limpieza de hardware | Total: $25000.0 | Fecha: 06/06/2026
+Cliente: Bruno Dido | Servicios: Cambio de modulo | Total: $100000.0 | Fecha: 06/06/2026
+Cliente: Maru | Servicios: Limpieza de hardware, Cambio de componente | Total: $45000.0 | Fecha: 06/06/2026
+Cliente: Maru | Servicios: Cambio de pin de carga | Total: $25000.0 | Fecha: 06/06/2026

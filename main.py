@@ -5,8 +5,10 @@ from tkinter import ttk, messagebox
 import ttkbootstrap as tb
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageTemplate, Frame
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Image
+from reportlab.lib.units import cm
 import datetime
 
 CLIENTES_FILE = "clientes.txt"
@@ -340,7 +342,7 @@ def ventana_servicios():
 def ventana_trabajos():
     win = tb.Toplevel(root)
     win.title("Registrar Trabajo")
-    centrar_ventana(win, 500, 400)
+    centrar_ventana(win, 600, 500)
 
     # Cargar clientes
     clientes = []
@@ -353,18 +355,31 @@ def ventana_trabajos():
     except FileNotFoundError:
         clientes = []
 
-    # Cargar servicios con precio
-    servicios = []
+    # Cargar servicios PC
+    servicios_pc = []
     try:
         with open(SERVICIOS_PC_FILE, "r", encoding="utf-8") as f:
             for linea in f:
                 partes = linea.strip().split(";")
                 if len(partes) == 2:
                     nombre, precio = partes
-                    servicios.append((nombre, float(precio)))
+                    servicios_pc.append((nombre, float(precio)))
     except FileNotFoundError:
-        servicios = []
+        servicios_pc = []
 
+    # Cargar servicios Celulares
+    servicios_cel = []
+    try:
+        with open(SERVICIOS_CEL_FILE, "r", encoding="utf-8") as f:
+            for linea in f:
+                partes = linea.strip().split(";")
+                if len(partes) == 2:
+                    nombre, precio = partes
+                    servicios_cel.append((nombre, float(precio)))
+    except FileNotFoundError:
+        servicios_cel = []
+
+    # Selección de cliente
     tb.Label(win, text="Seleccionar Cliente:").pack()
     cliente_var = tk.StringVar()
     combo_clientes = ttk.Combobox(win, textvariable=cliente_var, values=clientes, width=50)
@@ -374,23 +389,39 @@ def ventana_trabajos():
         combo_clientes.event_generate("<Down>")
     combo_clientes.bind("<Button-1>", abrir_lista)
 
-    tb.Label(win, text="Seleccionar Servicios:").pack()
-    listbox_servicios = tk.Listbox(win, selectmode=tk.MULTIPLE, width=50, height=10)
-    for nombre, precio in servicios:
-        listbox_servicios.insert(tk.END, nombre)  # solo nombre
-    listbox_servicios.pack(pady=5)
+    # Selección de servicios PC
+    tb.Label(win, text="Seleccionar Servicios de PC:").pack()
+    listbox_pc = tk.Listbox(win, selectmode=tk.MULTIPLE, width=50, height=8)
+    for nombre, precio in servicios_pc:
+        listbox_pc.insert(tk.END, nombre)
+    listbox_pc.pack(pady=5)
 
+    # Selección de servicios Celulares
+    tb.Label(win, text="Seleccionar Servicios de Celulares:").pack()
+    listbox_cel = tk.Listbox(win, selectmode=tk.MULTIPLE, width=50, height=8)
+    for nombre, precio in servicios_cel:
+        listbox_cel.insert(tk.END, nombre)
+    listbox_cel.pack(pady=5)
+
+    # Guardar trabajo
     def guardar_y_cerrar():
         cliente = cliente_var.get()
-        seleccionados = [listbox_servicios.get(i) for i in listbox_servicios.curselection()]
+        seleccionados_pc = [listbox_pc.get(i) for i in listbox_pc.curselection()]
+        seleccionados_cel = [listbox_cel.get(i) for i in listbox_cel.curselection()]
+        seleccionados = seleccionados_pc + seleccionados_cel
+
         if not cliente or not seleccionados:
             messagebox.showwarning("Error", "Selecciona un cliente y al menos un servicio.")
             return
 
         # Calcular total
         total = 0
-        for sel in seleccionados:
-            for nombre, precio in servicios:
+        for sel in seleccionados_pc:
+            for nombre, precio in servicios_pc:
+                if nombre == sel:
+                    total += precio
+        for sel in seleccionados_cel:
+            for nombre, precio in servicios_cel:
                 if nombre == sel:
                     total += precio
 
@@ -481,22 +512,18 @@ def exportar_factura(cliente, telefono, email, servicios, total, fecha):
     elementos = []
     estilos = getSampleStyleSheet()
 
-    # Encabezado principal
-    titulo = Paragraph("<b><font size=20 color='blue'>Vesur</font></b>", estilos["Title"])
-    elementos.append(titulo)
-    elementos.append(Spacer(1, 10))
-
-    # Subtítulo con slogan
-    slogan = Paragraph("<font size=12 color='gray'><i>Tecnología que responde</i></font>", estilos["Normal"])
-    elementos.append(slogan)
+    # Logo o encabezado con imagen
+    logo = Image("vesur.jpeg", width=400, height=200)  # ajustá tamaño según tu imagen
+    logo.hAlign = "CENTER"  # centrar la imagen
+    elementos.append(logo)
     elementos.append(Spacer(1, 20))
 
     # Datos del cliente
     datos_cliente = Paragraph(
         f"<b>Datos del Cliente</b><br/>"
-        f"Nombre: {cliente}<br/>"
-        f"Teléfono: {telefono}<br/>"
-        f"Email: {email}",
+        f"<b>Nombre:</b> {cliente}<br/>"
+        f"<b>Teléfono:</b> {telefono}<br/>"
+        f"<b>Email:</b> {email}",
         estilos["Normal"]
     )
     elementos.append(datos_cliente)
