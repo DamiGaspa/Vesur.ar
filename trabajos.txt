@@ -1,4 +1,1 @@
-
-Cliente: Martin Urquiza | Servicios: Mantenimiento, Formateo - Instalacion de SO - Basico (sin Backup) | Total: $83000.0 | Fecha: 29/04/2026
-Cliente: Bruno Dido | Servicios: Cambio de componente | Total: $20000.0 | Fecha: 29/04/2026
-Cliente: Martin Urquiza | Servicios: Limpieza de GPU | Total: $15000.0 | Fecha: 29/04/2026
+Cliente: Bruno Dido | Servicios: Limpieza de hardware | Total: $25000.0 | Fecha: 06/06/2026

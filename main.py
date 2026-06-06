@@ -10,7 +10,8 @@ from reportlab.lib.styles import getSampleStyleSheet
 import datetime
 
 CLIENTES_FILE = "clientes.txt"
-SERVICIOS_FILE = "servicios.txt"
+SERVICIOS_PC_FILE = "servicios_pc.txt"
+SERVICIOS_CEL_FILE = "servicios_cel.txt"
 TRABAJOS_FILE = "trabajos.txt"
 
 # Funciones de guardado
@@ -22,6 +23,98 @@ def guardar_cliente(nombre, telefono, email):
         f.write(f"{nombre};{telefono};{email}\n")
     messagebox.showinfo("Éxito", "Cliente registrado correctamente.")
 
+def guardar_servicio_cel(nombre, precio):
+    if not nombre or not precio:
+        messagebox.showwarning("Error", "Completa todos los campos.")
+        return
+    try:
+        precio = float(precio)
+    except ValueError:
+        messagebox.showwarning("Error", "El precio debe ser un número.")
+        return
+    with open(SERVICIOS_CEL_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{nombre};{precio}\n")
+    messagebox.showinfo("Éxito", "Servicio de celular registrado correctamente.")
+
+def ventana_servicios_cel():
+    win = tb.Toplevel(root)
+    win.title("Registrar Servicio Celular")
+    centrar_ventana(win, 400, 200)
+
+    frame = tb.Frame(win)
+    frame.pack(expand=True)
+
+    tb.Label(frame, text="Nombre del servicio (Celular):").grid(row=0, column=0, pady=10, padx=10, sticky="e")
+    tb.Label(frame, text="Precio:").grid(row=1, column=0, pady=10, padx=10, sticky="e")
+
+    nombre = tb.Entry(frame, width=30)
+    precio = tb.Entry(frame, width=30)
+
+    nombre.grid(row=0, column=1, pady=10, padx=10)
+    precio.grid(row=1, column=1, pady=10, padx=10)
+
+    nombre.focus_set()
+
+    def guardar_y_cerrar():
+        guardar_servicio_cel(nombre.get(), precio.get())
+        win.destroy()
+
+    tb.Button(frame, text="Guardar", bootstyle="success", command=guardar_y_cerrar)\
+        .grid(row=2, columnspan=2, pady=20)
+    precio.bind("<Return>", lambda event: guardar_y_cerrar())
+
+def mostrar_servicios_cel():
+    win = tb.Toplevel(root)
+    win.title("Lista de Servicios Celulares")
+    centrar_ventana(win, 650, 400)
+
+    tree = ttk.Treeview(win, columns=("Servicio", "Precio"), show="headings", height=15)
+    tree.pack(fill="both", expand=True)
+
+    tree.heading("Servicio", text="Servicio")
+    tree.heading("Precio", text="Precio")
+
+    tree.column("Servicio", anchor="center", width=450)
+    tree.column("Precio", anchor="center", width=150)
+
+    try:
+        with open(SERVICIOS_CEL_FILE, "r", encoding="utf-8") as f:
+            for linea in f:
+                partes = linea.strip().split(";")
+                if len(partes) == 2:
+                    nombre, precio = partes
+                    tree.insert("", "end", values=(nombre, f"${precio}"))
+    except FileNotFoundError:
+        tree.insert("", "end", values=("No hay servicios registrados aún", ""))
+
+    # Botón eliminar
+    def eliminar_servicio_cel():
+        seleccion = tree.selection()
+        if not seleccion:
+            messagebox.showwarning("Error", "Selecciona un servicio para eliminar.", parent=win)
+            return
+        valores = tree.item(seleccion[0], "values")
+        nombre, precio = valores
+        precio = precio.replace("$", "")
+
+        confirmar = messagebox.askyesno("Confirmar eliminación",
+                                        f"¿Seguro que deseas eliminar el servicio:\n{nombre}?",
+                                        parent=win)
+        if not confirmar:
+            return
+
+        with open(SERVICIOS_CEL_FILE, "r", encoding="utf-8") as f:
+            lineas = f.readlines()
+        with open(SERVICIOS_CEL_FILE, "w", encoding="utf-8") as f:
+            for linea in lineas:
+                if linea.strip() != f"{nombre};{precio}":
+                    f.write(linea)
+
+        tree.delete(seleccion[0])
+        messagebox.showinfo("Éxito", "Servicio eliminado correctamente.", parent=win)
+
+    tb.Button(win, text="Eliminar Servicio Celular", bootstyle="danger", command=eliminar_servicio_cel).pack(pady=10)
+
 def mostrar_servicios():
     win = tb.Toplevel(root)
     win.title("Lista de Servicios")
@@ -30,7 +123,7 @@ def mostrar_servicios():
     text.pack()
 
     try:
-        with open(SERVICIOS_FILE, "r", encoding="utf-8") as f:
+        with open(SERVICIOS_PC_FILE, "r", encoding="utf-8") as f:
             lineas = f.readlines()
             if not lineas:
                 contenido = "No hay servicios registrados aún."
@@ -128,7 +221,7 @@ def mostrar_servicios():
     tree.column("Precio", anchor="center", width=150)
 
     try:
-        with open(SERVICIOS_FILE, "r", encoding="utf-8") as f:
+        with open(SERVICIOS_PC_FILE, "r", encoding="utf-8") as f:
             for linea in f:
                 partes = linea.strip().split(";")
                 if len(partes) == 2:
@@ -155,9 +248,9 @@ def mostrar_servicios():
             return
 
         # Eliminar del archivo
-        with open(SERVICIOS_FILE, "r", encoding="utf-8") as f:
+        with open(SERVICIOS_PC_FILE, "r", encoding="utf-8") as f:
             lineas = f.readlines()
-        with open(SERVICIOS_FILE, "w", encoding="utf-8") as f:
+        with open(SERVICIOS_PC_FILE, "w", encoding="utf-8") as f:
             for linea in lineas:
                 if linea.strip() != f"{nombre};{precio}":
                     f.write(linea)
@@ -263,7 +356,7 @@ def ventana_trabajos():
     # Cargar servicios con precio
     servicios = []
     try:
-        with open(SERVICIOS_FILE, "r", encoding="utf-8") as f:
+        with open(SERVICIOS_PC_FILE, "r", encoding="utf-8") as f:
             for linea in f:
                 partes = linea.strip().split(";")
                 if len(partes) == 2:
@@ -337,11 +430,12 @@ frame_botones = tb.Frame(root)
 frame_botones.pack(pady=10)
 
 tb.Button(frame_botones, text="Registrar Cliente", bootstyle="success", command=ventana_clientes).grid(row=0, column=0, padx=10)
-tb.Button(frame_botones, text="Registrar Servicio", bootstyle="primary", command=ventana_servicios).grid(row=0, column=1, padx=10)
-tb.Button(frame_botones, text="Registrar Trabajo", bootstyle="warning", command=ventana_trabajos).grid(row=0, column=2, padx=10)
-
 tb.Button(frame_botones, text="Ver Clientes", bootstyle="info", command=mostrar_clientes).grid(row=1, column=0, pady=10)
-tb.Button(frame_botones, text="Ver Servicios", bootstyle="info", command=mostrar_servicios).grid(row=1, column=1, pady=10)
+tb.Button(frame_botones, text="Registrar Servicio PC", bootstyle="primary", command=ventana_servicios).grid(row=0, column=1, padx=10)
+tb.Button(frame_botones, text="Ver Servicios PC", bootstyle="info", command=mostrar_servicios).grid(row=1, column=1, pady=10)
+tb.Button(frame_botones, text="Registrar Servicio Celular", bootstyle="success", command=ventana_servicios_cel).grid(row=0, column=2, padx=10)
+tb.Button(frame_botones, text="Ver Servicios Celular", bootstyle="info", command=mostrar_servicios_cel).grid(row=1, column=2, pady=10)
+tb.Button(frame_botones, text="Registrar Trabajo", bootstyle="warning", command=ventana_trabajos).grid(row=0, column=3, padx=10)
 
 tb.Label(root, text="Lista de Trabajos Realizados", font=("Arial", 14, "bold")).pack(pady=(10, 1))
 
@@ -367,7 +461,7 @@ def guardar_servicio(nombre, precio):
     except ValueError:
         messagebox.showwarning("Error", "El precio debe ser un número.")
         return
-    with open(SERVICIOS_FILE, "a", encoding="utf-8") as f:
+    with open(SERVICIOS_PC_FILE, "a", encoding="utf-8") as f:
         f.write(f"{nombre};{precio}\n")
     messagebox.showinfo("Éxito", "Servicio registrado correctamente.")
 
@@ -453,7 +547,7 @@ def exportar_pdf_desde_seleccion():
     # Buscar precios de servicios
     servicios_con_precio = []
     try:
-        with open(SERVICIOS_FILE, "r", encoding="utf-8") as f:
+        with open(SERVICIOS_PC_FILE, "r", encoding="utf-8") as f:
             for linea in f:
                 partes = linea.strip().split(";")
                 if len(partes) == 2:  # solo procesar si tiene nombre y precio
